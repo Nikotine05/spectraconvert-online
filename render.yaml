@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: spectraconvert-api
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: VITE_PAYPAL_ENVIRONMENT
+        value: live
+      - key: APP_URL
+        value: https://spectraconvertonline.netlify.app
+      - key: ALLOWED_ORIGINS
+        value: https://spectraconvertonline.netlify.app,http://127.0.0.1:3000,http://localhost:3000
