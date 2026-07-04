@@ -67,10 +67,10 @@ const verifyPassword = (password, storedHash) => {
 };
 
 const DEFAULT_GOOGLE_CLIENT_ID = '920941311246-iqe7k55r4lg1959ot6jdhpgtc8im7tmp.apps.googleusercontent.com';
-const googleClientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
+const googleClientId = DEFAULT_GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
-const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://127.0.0.1:3000/api/auth/google/callback';
-const appUrl = process.env.APP_URL || 'http://127.0.0.1:3000';
+const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://spectraconvert-api.onrender.com/api/auth/google/callback';
+const appUrl = process.env.APP_URL || 'https://spectraconvertonline.netlify.app';
 
 const upsertGoogleUser = async (profile) => {
   const data = await readAppData();
