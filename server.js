@@ -71,6 +71,37 @@ const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://127.0.0.1:3000/api/auth/google/callback';
 const appUrl = process.env.APP_URL || 'http://127.0.0.1:3000';
 
+const upsertGoogleUser = async (profile) => {
+  const data = await readAppData();
+  const normalizedEmail = String(profile.email || '').trim().toLowerCase();
+  let user = Object.values(data.users).find((candidate) => (
+    candidate.googleId === profile.sub || candidate.email === normalizedEmail
+  ));
+
+  if (!user) {
+    const id = `user_${crypto.randomUUID()}`;
+    user = {
+      id,
+      name: profile.name || normalizedEmail.split('@')[0],
+      email: normalizedEmail,
+      googleId: profile.sub,
+      provider: 'google',
+      credits: 0,
+      createdAt: new Date().toISOString(),
+    };
+    data.users[id] = user;
+  } else {
+    user.googleId = profile.sub;
+    user.name = user.name || profile.name || normalizedEmail.split('@')[0];
+    user.email = normalizedEmail;
+    user.provider = user.passwordHash ? 'password_google' : 'google';
+    data.users[user.id] = user;
+  }
+
+  await writeAppData(data);
+  return user;
+};
+
 const redirectWithAuthError = (res, message) => {
   const redirectUrl = new URL(appUrl);
   redirectUrl.searchParams.set('authError', message);
@@ -151,6 +182,10 @@ app.get('/api/health', (req, res) => {
   res.json({ ok: true });
 });
 
+app.get('/api/config', (req, res) => {
+  res.json({ googleClientId: googleClientId || '' });
+});
+
 // Auth endpoints
 app.post('/api/auth/signup', async (req, res) => {
   try {
@@ -212,6 +247,40 @@ app.get('/api/auth/me/:id', async (req, res) => {
     res.json({ user: publicUser(user) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load account.' });
+  }
+});
+
+app.post('/api/auth/google-token', async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    if (!googleClientId) {
+      return res.status(500).json({ error: 'Google login is not configured yet.' });
+    }
+    if (!accessToken) {
+      return res.status(400).json({ error: 'Google did not return a login token.' });
+    }
+
+    const tokenInfoResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
+    const tokenInfo = await tokenInfoResponse.json();
+    const tokenAudience = tokenInfo.audience || tokenInfo.aud || tokenInfo.issued_to;
+
+    if (!tokenInfoResponse.ok || tokenAudience !== googleClientId) {
+      return res.status(401).json({ error: tokenInfo.error_description || tokenInfo.error || 'Google token is not valid for this app.' });
+    }
+
+    const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const profile = await profileResponse.json();
+    if (!profileResponse.ok || !profile.email || !profile.sub) {
+      return res.status(401).json({ error: profile.error_description || profile.error || 'Google profile load failed.' });
+    }
+
+    const user = await upsertGoogleUser(profile);
+    res.json({ user: publicUser(user) });
+  } catch (error) {
+    console.error('Google token auth failed:', error.message || error);
+    res.status(500).json({ error: error.message || 'Google login failed.' });
   }
 });
 
@@ -512,4 +581,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`CloudConvert Clone Server running on port ${PORT}`);
 });
-

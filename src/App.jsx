@@ -27,6 +27,28 @@ const clientId = isLive ? import.meta.env.VITE_PAYPAL_LIVE_CLIENT_ID : import.me
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const apiUrl = (path) => `${API_BASE_URL}${path}`;
 
+const ensureGoogleScript = () => new Promise((resolve, reject) => {
+  if (window.google?.accounts?.oauth2) {
+    resolve();
+    return;
+  }
+
+  const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+  if (existingScript) {
+    existingScript.addEventListener('load', () => resolve(), { once: true });
+    existingScript.addEventListener('error', () => reject(new Error('Google login script failed to load.')), { once: true });
+    return;
+  }
+
+  const script = document.createElement('script');
+  script.src = 'https://accounts.google.com/gsi/client';
+  script.async = true;
+  script.defer = true;
+  script.onload = () => resolve();
+  script.onerror = () => reject(new Error('Google login script failed to load.'));
+  document.head.appendChild(script);
+});
+
 const initialOptions = {
   "client-id": clientId || "test",
   currency: "USD",
@@ -58,6 +80,7 @@ function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
+  const [googleClientId, setGoogleClientId] = useState('');
 
   const activeUserId = currentUser?.id || 'user_1';
 
@@ -93,6 +116,13 @@ function App() {
       fetchUserCredits('user_1');
     }
   };
+
+  useEffect(() => {
+    fetch(apiUrl('/api/config'))
+      .then((response) => response.ok ? response.json() : Promise.reject())
+      .then((config) => setGoogleClientId(config.googleClientId || ''))
+      .catch(() => setGoogleClientId(''));
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -221,8 +251,53 @@ function App() {
     fetchUserCredits('user_1');
   };
 
-  const handleGoogleAuth = () => {
-    window.location.href = apiUrl('/api/auth/google');
+  const handleGoogleAuth = async () => {
+    setAuthError('');
+
+    if (!googleClientId) {
+      setAuthError('Google login is not configured yet.');
+      return;
+    }
+
+    try {
+      await ensureGoogleScript();
+
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: googleClientId,
+        scope: 'openid email profile',
+        prompt: 'select_account',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.error || !tokenResponse.access_token) {
+            setAuthError(tokenResponse.error_description || tokenResponse.error || 'Google login failed.');
+            return;
+          }
+
+          try {
+            const response = await fetch(apiUrl('/api/auth/google-token'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken: tokenResponse.access_token })
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.error || 'Google login failed.');
+            }
+
+            setCurrentUser(data.user);
+            setUserCredits(data.user.credits || 0);
+            localStorage.setItem('swiftconvert_user_id', data.user.id);
+            setIsAuthOpen(false);
+          } catch (error) {
+            setAuthError(error.message || 'Google login failed.');
+          }
+        }
+      });
+
+      tokenClient.requestAccessToken();
+    } catch (error) {
+      setAuthError(error.message || 'Google login failed.');
+    }
   };
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -934,4 +1009,3 @@ function App() {
 }
 
 export default App;
-
