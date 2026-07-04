@@ -252,53 +252,9 @@ function App() {
     fetchUserCredits('user_1');
   };
 
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = () => {
     setAuthError('');
-
-    if (!googleClientId) {
-      setAuthError('Google login is not configured yet.');
-      return;
-    }
-
-    try {
-      await ensureGoogleScript();
-
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: googleClientId,
-        scope: 'openid email profile',
-        prompt: 'select_account',
-        callback: async (tokenResponse) => {
-          if (tokenResponse.error || !tokenResponse.access_token) {
-            setAuthError(tokenResponse.error_description || tokenResponse.error || 'Google login failed.');
-            return;
-          }
-
-          try {
-            const response = await fetch(apiUrl('/api/auth/google-token'), {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ accessToken: tokenResponse.access_token })
-            });
-            const data = await response.json();
-
-            if (!response.ok) {
-              throw new Error(data.error || 'Google login failed.');
-            }
-
-            setCurrentUser(data.user);
-            setUserCredits(data.user.credits || 0);
-            localStorage.setItem('swiftconvert_user_id', data.user.id);
-            setIsAuthOpen(false);
-          } catch (error) {
-            setAuthError(error.message || 'Google login failed.');
-          }
-        }
-      });
-
-      tokenClient.requestAccessToken();
-    } catch (error) {
-      setAuthError(error.message || 'Google login failed.');
-    }
+    window.location.href = apiUrl('/api/auth/google');
   };
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
