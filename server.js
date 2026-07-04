@@ -263,9 +263,15 @@ app.post('/api/auth/google-token', async (req, res) => {
 
     const tokenInfoResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`);
     const tokenInfo = await tokenInfoResponse.json();
-    const tokenAudience = tokenInfo.audience || tokenInfo.aud || tokenInfo.issued_to;
+    const tokenAudiences = [
+      tokenInfo.audience,
+      tokenInfo.aud,
+      tokenInfo.issued_to,
+      tokenInfo.azp,
+    ].flat().filter(Boolean);
+    const allowedGoogleClientIds = [googleClientId, DEFAULT_GOOGLE_CLIENT_ID].filter(Boolean);
 
-    if (!tokenInfoResponse.ok || ![googleClientId, DEFAULT_GOOGLE_CLIENT_ID].includes(tokenAudience)) {
+    if (!tokenInfoResponse.ok || !tokenAudiences.some((audience) => allowedGoogleClientIds.includes(audience))) {
       return res.status(401).json({ error: tokenInfo.error_description || tokenInfo.error || 'Google token is not valid for this app.' });
     }
 
