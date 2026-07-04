@@ -66,7 +66,8 @@ const verifyPassword = (password, storedHash) => {
   return hashPassword(password, salt) === storedHash;
 };
 
-const googleClientId = process.env.GOOGLE_CLIENT_ID;
+const DEFAULT_GOOGLE_CLIENT_ID = '920941311246-iqe7k55r4lg1959ot6jdhpgtc8im7tmp.apps.googleusercontent.com';
+const googleClientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'http://127.0.0.1:3000/api/auth/google/callback';
 const appUrl = process.env.APP_URL || 'http://127.0.0.1:3000';
@@ -183,7 +184,7 @@ app.get('/api/health', (req, res) => {
 });
 
 app.get('/api/config', (req, res) => {
-  res.json({ googleClientId: googleClientId || '' });
+  res.json({ googleClientId: DEFAULT_GOOGLE_CLIENT_ID });
 });
 
 // Auth endpoints
@@ -264,7 +265,7 @@ app.post('/api/auth/google-token', async (req, res) => {
     const tokenInfo = await tokenInfoResponse.json();
     const tokenAudience = tokenInfo.audience || tokenInfo.aud || tokenInfo.issued_to;
 
-    if (!tokenInfoResponse.ok || tokenAudience !== googleClientId) {
+    if (!tokenInfoResponse.ok || ![googleClientId, DEFAULT_GOOGLE_CLIENT_ID].includes(tokenAudience)) {
       return res.status(401).json({ error: tokenInfo.error_description || tokenInfo.error || 'Google token is not valid for this app.' });
     }
 

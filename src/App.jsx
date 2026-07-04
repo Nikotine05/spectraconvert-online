@@ -26,6 +26,7 @@ const isLive = import.meta.env.VITE_PAYPAL_ENVIRONMENT === 'live';
 const clientId = isLive ? import.meta.env.VITE_PAYPAL_LIVE_CLIENT_ID : import.meta.env.VITE_PAYPAL_SANDBOX_CLIENT_ID;
 const API_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
 const apiUrl = (path) => `${API_BASE_URL}${path}`;
+const DEFAULT_GOOGLE_CLIENT_ID = '920941311246-iqe7k55r4lg1959ot6jdhpgtc8im7tmp.apps.googleusercontent.com';
 
 const ensureGoogleScript = () => new Promise((resolve, reject) => {
   if (window.google?.accounts?.oauth2) {
@@ -80,7 +81,7 @@ function App() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authError, setAuthError] = useState('');
   const [authForm, setAuthForm] = useState({ name: '', email: '', password: '' });
-  const [googleClientId, setGoogleClientId] = useState('');
+  const [googleClientId, setGoogleClientId] = useState(DEFAULT_GOOGLE_CLIENT_ID);
 
   const activeUserId = currentUser?.id || 'user_1';
 
@@ -120,8 +121,8 @@ function App() {
   useEffect(() => {
     fetch(apiUrl('/api/config'))
       .then((response) => response.ok ? response.json() : Promise.reject())
-      .then((config) => setGoogleClientId(config.googleClientId || ''))
-      .catch(() => setGoogleClientId(''));
+      .then((config) => setGoogleClientId(config.googleClientId || DEFAULT_GOOGLE_CLIENT_ID))
+      .catch(() => setGoogleClientId(DEFAULT_GOOGLE_CLIENT_ID));
   }, []);
 
   useEffect(() => {
