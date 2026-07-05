@@ -15,9 +15,3 @@ services:
         value: https://spectraconvertonline.netlify.app
       - key: ALLOWED_ORIGINS
         value: https://spectraconvertonline.netlify.app,http://127.0.0.1:3000,http://localhost:3000
-      - key: GOOGLE_CLIENT_ID
-        value: 920941311246-lficdku6lpv2n81hjtdh5l84039avibi.apps.googleusercontent.com
-      - key: GOOGLE_CLIENT_SECRET
-        value: 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
-      - key: GOOGLE_REDIRECT_URI
-        value: https://spectraconvert-api.onrender.com/api/auth/google/callback
