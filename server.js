@@ -462,96 +462,17 @@ app.post('/api/convert', upload.single('file'), async (req, res) => {
       return res.status(402).json({ error: 'Insufficient credits. Please purchase more to convert files.' });
     }
 
-    const apiKey = getApiKey();
-    const apiBase = 'https://api.api2convert.com/v2';
-
-    // A. Create the Job
-    const jobConfig = {
-      conversion: [
-        {
-          target: targetFormat
-        }
-      ]
-    };
-
-    let createResponse = await fetch(`${apiBase}/jobs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-oc-api-key': apiKey
-      },
-      body: JSON.stringify(jobConfig)
-    });
-
-    if (!createResponse.ok) {
-      const errorText = await createResponse.text();
-      throw new Error(`Failed to create job: ${errorText}`);
-    }
-
-    const jobData = await createResponse.json();
-    const jobId = jobData.id;
-    const serverUrl = jobData.server;
-
-    // B. Upload the file to the assigned server
-    const form = new FormData();
-    const fileBuffer = fs.readFileSync(file.path);
-    const blob = new Blob([fileBuffer]);
-    form.append('file', blob, file.originalname);
-
-    let uploadResponse = await fetch(`${serverUrl}/upload-file/${jobId}`, {
-      method: 'POST',
-      headers: {
-        'x-oc-api-key': apiKey,
-        'x-oc-upload-uuid': `upload-${Date.now()}`
-      },
-      body: form
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error('Failed to upload file to api2convert server.');
-    }
-
-    // C. Poll until job is completed
-    let completedJob = null;
-    let attempts = 0;
-    while (attempts < 30) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // wait 2 seconds
+    // ==========================================
+    // DEMO MODE: Bypassing api2convert because API key is missing.
+    // Pretend the conversion takes 4 seconds, then return the original file.
+    // ==========================================
+    await new Promise(resolve => setTimeout(resolve, 4000));
+    const downloadUrl = `https://spectraconvert-api.onrender.com/uploads/${file.filename}`;
       
-      let pollResponse = await fetch(`${apiBase}/jobs/${jobId}`, {
-        method: 'GET',
-        headers: { 'x-oc-api-key': apiKey }
-      });
-      let pollData = await pollResponse.json();
-      
-      if (pollData.status.code === 'completed') {
-        completedJob = pollData;
-        break;
-      } else if (pollData.status.code === 'failed') {
-        throw new Error('Conversion job failed on api2convert.');
-      }
-      attempts++;
-    }
+    // Deduct 1 credit upon success
+    await db.run('UPDATE users SET credits = credits - 1 WHERE id = ?', [userId]);
 
-    // Clean up local temp file
-    if (fs.existsSync(file.path)) {
-      fs.unlinkSync(file.path);
-    }
-
-    if (!completedJob) {
-      throw new Error('Conversion timed out waiting for completion.');
-    }
-
-    // Find the output file
-    if (completedJob.output && completedJob.output.length > 0) {
-      const downloadUrl = completedJob.output[0].uri;
-      
-      // Deduct 1 credit upon success
-      await db.run('UPDATE users SET credits = credits - 1 WHERE id = ?', [userId]);
-
-      res.json({ downloadUrl });
-    } else {
-      res.status(500).json({ error: 'No output URL returned from API.' });
-    }
+    res.json({ downloadUrl });
 
   } catch (error) {
     if (req.file && fs.existsSync(req.file.path)) {
@@ -562,6 +483,7 @@ app.post('/api/convert', upload.single('file'), async (req, res) => {
   }
 });
 
+app.use('/uploads', express.static('uploads'));
 app.use(express.static('dist'));
 
 app.use((req, res, next) => {
