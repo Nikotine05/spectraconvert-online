@@ -428,7 +428,7 @@ function App() {
             <section className="hero">
               <div className="hero-content">
                 <h1>Transform Your Files</h1>
-                <p>Experience lightning-fast conversions across audio, video, documents, and images. SwiftConvert securely processes hundreds of formats directly in your browser.</p>
+                <p>Experience lightning-fast conversions across audio, video, documents, and images. Sign in or create an account to unlock 1000 free credits.</p>
               </div>
             </section>
 
@@ -796,7 +796,10 @@ function App() {
         <div className="modal-overlay auth-modal">
           <div className="modal-content auth-content">
             <div className="modal-header">
-              <h2>{authMode === 'signup' ? 'Create account' : 'Sign in'}</h2>
+              <div className="auth-heading">
+                <h2>{authMode === 'signup' ? 'Create account' : 'Sign in'}</h2>
+                <p className="auth-note">Sign in or create an account to unlock 1000 free credits.</p>
+              </div>
               <button className="close-btn" onClick={() => setIsAuthOpen(false)}><X size={20} /></button>
             </div>
             <form className="auth-form" onSubmit={handleAuthSubmit}>

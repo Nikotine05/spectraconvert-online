@@ -32,6 +32,7 @@ if (!fs.existsSync('uploads')) {
 
 const upload = multer({ dest: 'uploads/' });
 const appDbPath = path.join(process.cwd(), 'database.json');
+const WELCOME_CREDITS = 1000;
 
 const readAppData = async () => {
   try {
@@ -87,7 +88,8 @@ const upsertGoogleUser = async (profile) => {
       email: normalizedEmail,
       googleId: profile.sub,
       provider: 'google',
-      credits: 0,
+      credits: WELCOME_CREDITS,
+        welcomeCreditsGranted: true,
       createdAt: new Date().toISOString(),
     };
     data.users[id] = user;
@@ -210,7 +212,8 @@ app.post('/api/auth/signup', async (req, res) => {
       email: normalizedEmail,
       passwordHash: hashPassword(password),
       provider: 'password',
-      credits: 0,
+      credits: WELCOME_CREDITS,
+        welcomeCreditsGranted: true,
       createdAt: new Date().toISOString(),
     };
 
@@ -355,7 +358,8 @@ app.get('/api/auth/google/callback', async (req, res) => {
         email: normalizedEmail,
         googleId: profile.sub,
         provider: 'google',
-        credits: 0,
+        credits: WELCOME_CREDITS,
+        welcomeCreditsGranted: true,
         createdAt: new Date().toISOString(),
       };
       data.users[id] = user;
