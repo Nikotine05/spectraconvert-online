@@ -393,11 +393,8 @@ function App() {
       <header className="header">
         <div className="header-left">
           <div className="logo" onClick={() => setCurrentView('home')} style={{ cursor: 'pointer' }}>
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="logo-icon">
-              <path d="M16 2L2 10L16 18L30 10L16 2Z" fill="currentColor" fillOpacity="0.9" />
-              <path d="M2 22L16 30L30 22L16 14L2 22Z" fill="currentColor" fillOpacity="0.4" />
-            </svg>
-            <span>Swift<strong>Convert</strong></span>
+            <img src="/logo.png" alt="SpectraConvert Logo" className="logo-icon" style={{ width: '32px', height: '32px', borderRadius: '6px' }} />
+            <span>Spectra<strong>Convert</strong></span>
           </div>
           <nav className="nav-links">
             <a href="#" onClick={(e) => { e.preventDefault(); setCurrentView('home'); }}>Tools <ChevronDown size={14} style={{display:'inline', marginLeft: '4px', verticalAlign: 'middle'}}/></a>
@@ -597,7 +594,7 @@ function App() {
             <div className="feature">
               <div className="feature-icon"><Wrench size={32} /></div>
               <h3>Powerful API</h3>
-              <p>The SwiftConvert API offers full integration with your app, allowing you to convert files directly from your backend.</p>
+              <p>The SpectraConvert API offers full integration with your app, allowing you to convert files directly from your backend.</p>
             </div>
           </section>
         </>
