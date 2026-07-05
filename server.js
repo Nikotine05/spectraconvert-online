@@ -56,6 +56,14 @@ const publicUser = (user) => ({
   provider: user.provider || 'password',
 });
 
+const applyWelcomeCredits = (user) => {
+  if (!user.welcomeCreditsGranted) {
+    user.credits = (Number(user.credits) || 0) + WELCOME_CREDITS;
+    user.welcomeCreditsGranted = true;
+  }
+  return user;
+};
+
 const hashPassword = (password, salt = crypto.randomBytes(16).toString('hex')) => {
   const hash = crypto.scryptSync(password, salt, 64).toString('hex');
   return `${salt}:${hash}`;
@@ -89,7 +97,7 @@ const upsertGoogleUser = async (profile) => {
       googleId: profile.sub,
       provider: 'google',
       credits: WELCOME_CREDITS,
-        welcomeCreditsGranted: true,
+      welcomeCreditsGranted: true,
       createdAt: new Date().toISOString(),
     };
     data.users[id] = user;
@@ -98,6 +106,7 @@ const upsertGoogleUser = async (profile) => {
     user.name = user.name || profile.name || normalizedEmail.split('@')[0];
     user.email = normalizedEmail;
     user.provider = user.passwordHash ? 'password_google' : 'google';
+    applyWelcomeCredits(user);
     data.users[user.id] = user;
   }
 
@@ -213,7 +222,7 @@ app.post('/api/auth/signup', async (req, res) => {
       passwordHash: hashPassword(password),
       provider: 'password',
       credits: WELCOME_CREDITS,
-        welcomeCreditsGranted: true,
+      welcomeCreditsGranted: true,
       createdAt: new Date().toISOString(),
     };
 
@@ -237,6 +246,10 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'Email or password is incorrect.' });
     }
 
+    applyWelcomeCredits(user);
+    data.users[user.id] = user;
+    await writeAppData(data);
+
     res.json({ user: publicUser(user) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to sign in.' });
@@ -248,6 +261,9 @@ app.get('/api/auth/me/:id', async (req, res) => {
     const data = await readAppData();
     const user = data.users[req.params.id];
     if (!user) return res.status(404).json({ error: 'User not found.' });
+    applyWelcomeCredits(user);
+    data.users[user.id] = user;
+    await writeAppData(data);
     res.json({ user: publicUser(user) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to load account.' });
@@ -344,35 +360,7 @@ app.get('/api/auth/google/callback', async (req, res) => {
       throw new Error(profile.error_description || profile.error || 'Google profile load failed.');
     }
 
-    const data = await readAppData();
-    const normalizedEmail = String(profile.email).trim().toLowerCase();
-    let user = Object.values(data.users).find((candidate) => (
-      candidate.googleId === profile.sub || candidate.email === normalizedEmail
-    ));
-
-    if (!user) {
-      const id = `user_${crypto.randomUUID()}`;
-      user = {
-        id,
-        name: profile.name || normalizedEmail.split('@')[0],
-        email: normalizedEmail,
-        googleId: profile.sub,
-        provider: 'google',
-        credits: WELCOME_CREDITS,
-        welcomeCreditsGranted: true,
-        createdAt: new Date().toISOString(),
-      };
-      data.users[id] = user;
-    } else {
-      user.googleId = profile.sub;
-      user.name = user.name || profile.name || normalizedEmail.split('@')[0];
-      user.email = normalizedEmail;
-      user.provider = user.passwordHash ? 'password_google' : 'google';
-      data.users[user.id] = user;
-    }
-
-    await writeAppData(data);
-
+    const user = await upsertGoogleUser(profile);
     const redirectUrl = new URL(appUrl);
     redirectUrl.searchParams.set('googleUser', user.id);
     res.redirect(redirectUrl.toString());
