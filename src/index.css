@@ -18,6 +18,20 @@
   --neu-shadow-pressed-sm: inset 3px 3px 6px 0 rgba(163,177,198, 0.7), inset -3px -3px 6px 0 rgba(255,255,255, 0.8);
 }
 
+body.dark-mode {
+  --bg-color: #1a1b26;
+  --text-primary: #a9b1d6;
+  --text-secondary: #565f89;
+  --primary-color: #7aa2f7;
+  --primary-hover: #8caaee;
+  --surface-color: #1a1b26;
+  --border-color: transparent;
+  --neu-shadow: 9px 9px 16px rgba(15, 15, 20, 0.6), -9px -9px 16px rgba(35, 36, 45, 0.5);
+  --neu-shadow-sm: 4px 4px 8px rgba(15, 15, 20, 0.6), -4px -4px 8px rgba(35, 36, 45, 0.5);
+  --neu-shadow-pressed: inset 6px 6px 10px 0 rgba(15, 15, 20, 0.7), inset -6px -6px 10px 0 rgba(35, 36, 45, 0.8);
+  --neu-shadow-pressed-sm: inset 3px 3px 6px 0 rgba(15, 15, 20, 0.7), inset -3px -3px 6px 0 rgba(35, 36, 45, 0.8);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -29,6 +43,7 @@ body {
   background-color: var(--bg-color);
   color: var(--text-primary);
   line-height: 1.5;
+  transition: background-color 0.3s, color 0.3s;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -46,7 +61,33 @@ button {
   outline: none;
 }
 
+.page-layout {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.ad-sidebar {
+  width: 160px;
+  display: none;
+  padding: 20px 10px;
+  box-sizing: content-box;
+}
+
+@media (min-width: 1200px) {
+  .ad-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+}
+
 .app-container {
+  flex: 1;
+  width: 100%;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -176,7 +217,6 @@ button {
   margin-bottom: 1.5rem;
   letter-spacing: -0.02em;
   color: var(--text-primary);
-  text-shadow: 2px 2px 4px rgba(163,177,198,0.5), -2px -2px 4px rgba(255,255,255,0.8);
 }
 
 .hero p {
@@ -1243,4 +1283,9 @@ button {
   .account-name {
     max-width: 96px;
   }
+}.desktop-ad { display: none; }
+.mobile-ad { display: inline-block; }
+@media (min-width: 768px) {
+  .desktop-ad { display: inline-block; }
+  .mobile-ad { display: none; }
 }

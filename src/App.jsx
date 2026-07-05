@@ -429,6 +429,12 @@ function App() {
               </div>
             </section>
 
+            <div className="ad-container" style={{ textAlign: 'center', margin: '20px auto', width: '100%', maxWidth: '728px' }}>
+              <iframe src="/ad-desktop.html" width="728" height="90" frameBorder="0" scrolling="no" className="desktop-ad"></iframe>
+              <iframe src="/ad-mobile.html" width="320" height="50" frameBorder="0" scrolling="no" className="mobile-ad"></iframe>
+            </div>
+
+
         {!file && (
           <div className="uploader-wrapper">
             <div 
