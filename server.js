@@ -32,7 +32,7 @@ if (!fs.existsSync('uploads')) {
 
 const upload = multer({ dest: 'uploads/' });
 const appDbPath = path.join(process.cwd(), 'database.json');
-const WELCOME_CREDITS = 1000;
+const WELCOME_CREDITS = 10;
 
 const readAppData = async () => {
   try {
