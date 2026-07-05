@@ -75,8 +75,8 @@ const verifyPassword = (password, storedHash) => {
   return hashPassword(password, salt) === storedHash;
 };
 
-const DEFAULT_GOOGLE_CLIENT_ID = '920941311246-iqe7k55r4lg1959ot6jdhpgtc8im7tmp.apps.googleusercontent.com';
-const googleClientId = DEFAULT_GOOGLE_CLIENT_ID;
+const DEFAULT_GOOGLE_CLIENT_ID = '920941311246-5f5rv8f6m05tgamq5jp4vb3b5u56m40r.apps.googleusercontent.com';
+const googleClientId = process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID;
 const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 const googleRedirectUri = process.env.GOOGLE_REDIRECT_URI || 'https://spectraconvert-api.onrender.com/api/auth/google/callback';
 const appUrl = process.env.APP_URL || 'https://spectraconvertonline.netlify.app';
