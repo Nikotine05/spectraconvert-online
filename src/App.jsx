@@ -425,7 +425,7 @@ function App() {
             <section className="hero">
               <div className="hero-content">
                 <h1>Transform Your Files</h1>
-                <p>Experience lightning-fast conversions across audio, video, documents, and images. Sign in or create an account to unlock 1000 free credits.</p>
+                <p>Experience lightning-fast conversions across audio, video, documents, and images. Sign in or create an account to unlock 10 free credits.</p>
               </div>
             </section>
 
@@ -795,7 +795,7 @@ function App() {
             <div className="modal-header">
               <div className="auth-heading">
                 <h2>{authMode === 'signup' ? 'Create account' : 'Sign in'}</h2>
-                <p className="auth-note">Sign in or create an account to unlock 1000 free credits.</p>
+                <p className="auth-note">Sign in or create an account to unlock 10 free credits.</p>
               </div>
               <button className="close-btn" onClick={() => setIsAuthOpen(false)}><X size={20} /></button>
             </div>
